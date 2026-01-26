@@ -10,7 +10,12 @@
       {
         "group": "Getting Started",
         "pages": [
-          "getting-started/user-acquisition/untitled-page"
+          {
+            "group": "Meta Ads",
+            "pages": [
+              "getting-started/user-acquisition/meta-ads/first-campaigns"
+            ]
+          }
         ]
       }
     ]
