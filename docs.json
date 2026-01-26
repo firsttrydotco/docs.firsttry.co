@@ -32,18 +32,10 @@
   "navigation": {
     "groups": [
       {
-        "group": "Welcome",
-        "pages": ["introduction"]
-      },
-      {
         "group": "Getting Started",
         "pages": [
-          {
-            "group": "Meta Ads",
-            "pages": [
-              "getting-started/user-acquisition/meta-ads/first-campaigns"
-            ]
-          }
+          "introduction",
+          "getting-started/user-acquisition/meta-ads/first-campaigns"
         ]
       }
     ]
