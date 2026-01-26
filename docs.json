@@ -10,12 +10,7 @@
       {
         "group": "Getting Started",
         "pages": [
-          {
-            "group": "User Acquisition",
-            "pages": [
-              "getting-started/user-acquisition/untitled-page"
-            ]
-          }
+          "getting-started/user-acquisition/untitled-page"
         ]
       }
     ]
