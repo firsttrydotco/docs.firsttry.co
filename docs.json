@@ -1,12 +1,40 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Documentation",
+  "name": "First Try",
+  "analytics": {
+    "posthog": {
+      "apiKey": "phc_pxd53viYzYm5cBw7gEjhVO6ZamIGyaXQ7aM0gwzwUqs",
+      "apiHost": "https://eu.i.posthog.com"
+    }
+  },
+  "logo": {
+    "dark": "/logo/dark.png",
+    "light": "/logo/light.png",
+    "href": "https://firsttry.co"
+  },
+  "favicon": "/favicon.svg",
   "colors": {
-    "primary": "#0D9373"
+    "primary": "#22BB9A",
+    "light": "#22BB9A",
+    "dark": "#1a9578"
+  },
+  "topbarLinks": [
+    {
+      "name": "← Back to site",
+      "url": "https://firsttry.co"
+    }
+  ],
+  "topbarCtaButton": {
+    "name": "Work with me",
+    "url": "mailto:tim@firsttry.co"
   },
   "navigation": {
     "groups": [
+      {
+        "group": "Welcome",
+        "pages": ["introduction"]
+      },
       {
         "group": "Getting Started",
         "pages": [
@@ -19,5 +47,12 @@
         ]
       }
     ]
+  },
+  "footerSocials": {
+    "linkedin": "https://www.linkedin.com/in/timotherey/",
+    "x": "https://x.com/timothe_rey"
+  },
+  "feedback": {
+    "thumbsRating": true
   }
 }
