@@ -5,7 +5,8 @@
   "analytics": {
     "posthog": {
       "apiKey": "phc_pxd53viYzYm5cBw7gEjhVO6ZamIGyaXQ7aM0gwzwUqs",
-      "apiHost": "https://eu.i.posthog.com"
+      "apiHost": "https://eu.i.posthog.com",
+      "sessionRecording": true
     }
   },
   "logo": {
