@@ -2,7 +2,7 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "First Try",
-  "analytics": {
+  "integrations": {
     "posthog": {
       "apiKey": "phc_pxd53viYzYm5cBw7gEjhVO6ZamIGyaXQ7aM0gwzwUqs",
       "apiHost": "https://eu.i.posthog.com",
