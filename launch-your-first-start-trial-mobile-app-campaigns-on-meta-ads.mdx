@@ -1,0 +1,448 @@
+---
+title: "Launching your first Start Trial mobile app campaign on Meta Ads"
+description: "Launching your first Facebook / Meta Ads user acquisition campaigns (Installs / Start Trial / Purchase) for a subscription mobile app, using the Meta SDK or RevenueCat + your MMP."
+icon: "rocket-launch"
+keywords: ["revenuecat","meta ads","ios","meta aem","mobile attribution","mobile app growth"]
+mode: "default"
+---
+
+This guide is for you if:
+
+- you want to launch your first App Events campaigns on Meta Ads
+- you did not decide yet whether you will use facebook sdk, or another tool like revenuecat or an MMP to track your campaigns.
+
+I'm a mobile attribution nerd, but not everyone should need to be in order to lauch their first campaigns!
+
+Here's an actionable guide if you want to launch a new mobile app on the best mobile ad network in the western world, Meta Ads.
+
+I'll explain iOS in detail, and Android will seem super simple in comparison.
+
+Let's go!
+
+---
+
+(I also turned this documentation into a video if you would rather watch it)
+
+<iframe src="https://www.youtube.com/embed/x2tKbtJoSrM" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+# Steps
+
+1. decide how you will send data to meta ads
+2. integrate sdks
+3. configure developers.facebook.com 
+4. configure facebook events manager
+5. launch your campaign on ads manager
+6. analyze your ROAS (Return on Ad Spend)
+
+---
+
+# Decide how you will send data to meta ads
+
+Here is a simple representation of what the tools you need to work with:
+
+- **your app** can track installs, start trial and purchase events. you have lots of options for tools that can track & send these events. of course you don't want to integrate all of them!
+- **ad networks** such as Meta Ads need to receive these events, **with the correct parameters** (parameters = your users' device info) that they need in order to attribute the results of their campaigns and optimize them
+
+<Columns cols={2}>
+  <Card title="APP " icon="mobile">
+    <u>The app </u>**<u>tracks</u>**<u> events</u>
+
+    **events you can track:**
+
+    - Install
+    - Start Trial
+    - Purchase: events and values of these events
+
+    **event tracking options:**
+
+    - **SKAN (iOS only)** ✓
+    - **Facebook SDK** ✓
+    - TikTok SDK
+    - AdServices (iOS only)
+    - Firebase SDK
+    - Subscription analytics tools: RevenueCat, Qonversion, Adapty, Purchasely...
+    - **MMPs: Adjust, Appsflyer, Tenjin, Singular...** ✓
+    - ~~product analytics tools : amplitude / posthog / mixpanel...~~
+    - ~~customer data platforms : segment / rudderstack ...~~
+    - Reverse ETL
+    - cCustom built stuff
+  </Card>
+  <Card title="AD NETWORKS" icon="bullhorn">
+    <u>The ad networks need to </u>**<u>receive</u>**<u> events.</u>
+
+    - **Meta**
+    - TikTok
+    - Google Ads
+    - SDK networks: Applovin, Unity, Mintegral...
+    - Apple Search Ads
+  </Card>
+</Columns>
+
+so many options ! but **here's my opinion :**
+
+## run your first tests with the facebook sdk
+
+1. if this is your first test, you need to go fast. **just implement the Facebook SDK in your app and track the events you want to optimize for using the client side sdk.** it works well, it is easy to setup, and it's free. I would advise you to **just track start_trial and purchase events, for the sake of simplicity.** and again, I insist : **track your events using the Meta sdk, on the client, not using anything server-side.** I'll explain why a bit later below.
+2. **implement a subscription analytics tool** like RevenueCat / Qonversion / Adapty / Purchasely in order to understand your subscription revenue per user, **but don't use it to send events to Meta Ads directly** - [these tools' integrations with Meta's Conversions API are currently broken](https://youtu.be/goI-oAn8KYU).
+3. I usually recommend to implement an **MMP** only when you had some positive signs when it comes to user acquisition. In fact, your MMP is going to be the central hub for your decisions when if comes to campaigns budgets allocation and ROAS analysis. So I'm not saying you shouldn't implement an MMP - rather that you should validate that your app has acquisition costs that will enable you to use paid user acquisition as a growth channel.
+
+**what about TikTok Ads?**
+
+Starting with the Facebook SDK won't lock you out of TikTok Ads later. You can add the TikTok SDK alongside Meta's.
+
+However, there's one technical consideration: only one SDK should manage SKAdNetwork conversion values at a time. If both SDKs try to update the conversion value, they'll conflict and corrupt your SKAN data.
+
+if you want to start SKAN campaigns on TikTok, disable SKAN management on one of the two SDKs (TikTok provides a `disableSKAdNetworkSupport()` method for this). You'll still get attribution data for both networks, but only one will handle the conversion value mapping.
+
+That said, if you're scaling on multiple paid channels and need unified SKAN management across all of them, that's usually when an MMP starts making sense.
+
+**The same logic applies to Google Ads**: you can use the Firebase SDK alongside Meta's & TikTok SDK. Just make sure only one SDK manages SKAN conversion values.
+
+**Why not an MMP now ?**
+
+Benchmarking MMPs in order to choose the one you're going to stick with for years, spending hours reading their docs and implementing all of their features, etc, takes a lot of time. And it's probably not your priority at this point.
+
+Think about where you are in your journey with this app you are trying to promote. You probably just need to validate whether your first campaigns show some positive signs, right ?
+
+- **Example of a positive sign :** your cost per install and cost per trial are close to your niche's benchmark, and your d7 LTV (net of VAT and App Store / Play Store fees) show that you are profitable , or close to it, 7 days after install  🚀
+- **Example of a negative sign :** your first campaigns on iOS US showed a \$20 cost per install on the Meta Ads dashboard, while your niche's average lifetime value on a per install basis is \$1, and your D60 LTV on RevenueCat for iOS in the US \$0.20. in this case, you are very far from profitability. so maybe you should fix your product's unique value proposition, or your creatives and targeting, rather than trying to improve tracking and ROAS analysis 🤷
+
+## at some point you will probably need an MMP.
+
+MMPs are great ! Just don't spend too much time implementing one if you will end up throwing away your app in 2 weeks because nobody wants it and it was faster to throw it away and create a new one. Implementing an MMP can be complicated : their docs are long, complex, talking about complex stuff you've never heard of , etc. If you complain about the Facebook SDK's documentation, then you'll be horrified by MMPs documentations.
+
+**If you use an MMP, send your start trial and purchase events to from RevenueCat to your MMP, and then send these events from your MMP to Meta Ads.**
+
+**RevenueCat** → **MMP** → **Meta Ads**
+
+Also, there's a lot of content on the internet about the fact that you can avoid working with an MMP - you can, but it's even more complicated than working with one 🤣 so if you don't know what you're doing, I recommend sticking with the classic methods! 99% of successful apps and games use MMPs to track their paid user acquisition.
+
+**my recommendations for MMPs:**
+
+- Appsflyer is too expensive if your needs are basic. go with them if you have a specific use case they cover and others dont.
+- Adjust and Singular are great
+- Tenjin is great if you're looking for a cheaper solution
+
+## which campaign objective should you choose?
+
+Here are the most common App Promotion campaign objectives. Even ROAS campaigns are a bit too advanced if you're just getting started, but understanding that Meta is able to make their campaigns work in such a way will be helpful for you to understand how Ad networks work.
+
+If you are not eligible to anything else than App Install campaigns, then make sure your events are correctly tracked, with the correct parameters, and launch an App Installs campaign to enable Meta to collect `start_trial` or `purchase` events faster than if you solely had organic traffic.
+
+| Campaign objectives                             | App Installs                                                                                                                                                                                                    | App Events (start_trial, purchase)                                                                                                                                                                                                                                                           | Target ROAS                                                                                                                                                                                                                                                                                        |
+| ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Requirements to launch                          | Meta received at least 1 App Install event with all parameters                                                                                                                                                  | Meta receives App Install events with all parameters + enough of the App Events you want to optimize for with all parameters. <br />"Enough" will be different on each ad account, you'll see whether you're eligible or not. **don't expect to be eligible if you have sent less than 50**. | Meta received App Install events with all parameters + enough of the App Events you want to optimize for **with Values + Currency.**<br />"Enough" will be different on each ad account, you'll see whether you're eligible or not. **don't expect to be eligible if you have sent less than 50**. |
+| Campaign expected behavior                      | Meta will provide you with the **cheapest App Installs** it can provide given the constraints you give it in terms of targeting. These campaigns will provide you with the **cheapest CPI (Cost Per Install)**. | Meta will provide you with the **cheapest App Events** it can provide given the constraints you give it in terms of targeting. These campaigns will provide you with the **cheapest CPT (Cost Per Trial) or CPP (Cost Per Purchase)**.                                                       | Meta will target **users most likely to generate revenue that meets or exceeds your D1 or D7 target ROAS (Return On Ad Spend).** These campaigns focus on **maximizing return on ad spend rather than minimizing cost per event.**                                                                 |
+| Campaign's expected users' LTV (Lifetime Value) | Lowest                                                                                                                                                                                                          | Medium for Start Trial<br />Higher for Purchase                                                                                                                                                                                                                                              | Highest                                                                                                                                                                                                                                                                                            |
+
+**Other details at the "Campaign" level :**
+
+- **Campaign bid strategy :** when you launch your first campaign, you want to understand what your CAC (Customer Acquisition Cost) is. You don't want to give too many constraints to Meta at this stage. So I recommend you to select "Highest Volume or Value".
+
+**Other details at the "Ad Set" level :**
+
+- **Attribution: this is important ! more about it below, in the "which campaign type should you launch?" section**
+- **Cost per result goal: None.** This is aligned with the fact that you've selected "Highest Volume or Value" for the campaign.
+- **Attribution window :** when configuring App Events & ROAS campaigns, you will see that you can change the Attribution Window for a given campaign, by using D1 or D7. go with D1 for simplicity and think about this later. Meta mostly optimizes for events happening at D1 anyway.
+- **Incremental Attribution** : You'll also see you can select "Incremental Attribution" as opposed to "Standard". Go with the standard, as Incremental is a new thing, and Meta Ads reports what Incremental would have given you anyway.
+
+## which campaign type should you launch?
+
+By "campaign type", I mean "attribution method" here, as opposed to "campaign objective" which we discussed just before.
+
+For iOS, Meta has 2 main attribution methods, and 1 for Android.
+
+Let's compare them :
+
+| Aspect                    | iOS AEM Campaigns                                                                                                                                                                                                               | iOS SKAN Campaigns             | Android Campaigns            |
+| :------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :----------------------------- | :--------------------------- |
+| **Full Name**             | Aggregated Event Measurement                                                                                                                                                                                                    | SKAdNetwork                    | Standard Android Attribution |
+| **Platform**              | iOS 14.5+                                                                                                                                                                                                                       | iOS 14+                        | Android (all versions)       |
+| **Attribution Method**    | Meta's probabilistic (IDFV + IP + device signals) + S2S events                                                                                                                                                                  | Apple's privacy framework      | Deterministic (GAID-based)   |
+| **User Consent Required** | Works regardless of ATT status                                                                                                                                                                                                  | Works regardless of ATT status | Google Play consent (varies) |
+| **Real-time Reporting**   | ✅ Near real-time (hours)                                                                                                                                                                                                        | ❌ Delayed (24-144 hours)       | ✅ Real-time                  |
+| **Uses SKAdNetwork**      | ❌ No (sources: [1](https://support.singular.net/hc/en-us/articles/115003252706-Facebook-Meta-Ads-Attribution-Integration), [2](https://www.singular.net/blog/advanced-aem/), [3](https://www.adjust.com/blog/meta-adjust-aem/)) | ✅ Yes                          | N/A                          |
+
+As you can see, the attribution method is different for each one, so obviously each campaign type is going to give you different results.
+
+you'll want to make sure you are eligible to run AEM campaigns, by sending Meta all the parameters it requires to run these campaigns, and i'll explain how in detail below. very often these campaigns are the most profitable app promotion campaigns on iOS.
+
+<Info>
+  I'm not talking about web to app or web to web flows here, which are an entirely different setup. This is for App Promotion campaigns. I advise you to start with these, and only go for Web to App campaigns when you spend at least \$10k per month profitably on Meta Ads. Again, this is just my opinion, feel free to experiment if you think your product can have much better results using web to app or web to web flows. Strategies that include the web work well, it's just not the thing I'd recommend if this is your first campaign on Meta Ads.
+</Info>
+
+## diving deeper into what meta ads needs as parameters for the events you send
+
+the reason why I recommend you to use Meta SDK is that it makes collecting the right parameters simple for iOS AEM Attribution and SKAN Attribution.
+
+Android attribution is super simple in comparison, but you want your campaigns to work for iOS.
+
+Here's the list of the **parameters you can send to Meta Ads** as part of the `install`, `start_trial` and `purchase` events, depending on the campaign type you want to run (iOS AEM app campaigns, iOS SKAN App Campaigns, or Android App Campaigns). Some are required, some optional, depending on campaign types. Here's a full breakdown. If you think something is false here, [this documentation is open source](https://github.com/firsttrydotco/docs.firsttry.co/tree/main/getting-started/user-acquisition/meta-ads) and you can contribute to it to correct me. I'm pretty confident though 🙂
+
+| Parameter                                              | Scope                                                                 | iOS AEM                                                                                                                                                       | iOS SKAN   | Android                                                             | Why is it important?                                                                                                                                                        |
+| ------------------------------------------------------ | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **vendor_id (IDFV)**                                   | Per vendor (survives reinstall if other apps from same vendor remain) | ✅ REQUIRED                                                                                                                                                    | ❌ Not used | N/A                                                                 | AppsFlyer: "Meta requires both the IP address and the IDFV to be included in the event payload. Without these identifiers, the event won't be eligible for AEM attribution" |
+| **IP Address**                                         | Session/temporary                                                     | ✅ REQUIRED (High priority)                                                                                                                                    | ❌ Not used | ✅ Recommended                                                       | Required for AEM eligibility. Meta CAPI docs list it as "High" priority.                                                                                                    |
+| **User Agent**                                         | Session                                                               | ✅ High priority                                                                                                                                               | ❌ Not used | ✅ Used                                                              | Eric Seufert notes MMPs transmit IP + User Agent to Meta for AEM measurement. Listed as "High" priority in Meta CAPI matching docs                                          |
+| **advertiser_id (IDFA)**                               | Device-wide (survives reinstall)                                      | ⚠️ Optional but very important - best signal when ATT granted                                                                                                 | ❌ Not used | N/A                                                                 | Improves match quality when ATT consent granted                                                                                                                             |
+| **madid (GAID)**                                       | Device-wide (survives reinstall unless reset)                         | N/A                                                                                                                                                           | N/A        | ✅ REQUIRED                                                          | Standard Android device identifier for attribution                                                                                                                          |
+| **install_referrer**                                   | Per install                                                           | N/A                                                                                                                                                           | N/A        | ✅ Recommended - Native Google framework                             | Google Play Install Referrer passes attribution data without device IDs. Meta uses this as primary Android attribution source since 2021.                                   |
+| **anon_id**                                            | Per app install (lost on reinstall)                                   | ✅ REQUIRED (or MMP equivalent)                                                                                                                                | ❌ Not used | ✅ REQUIRED (or MMP equivalent)                                      | Links events within same install; MMPs generate their own equivalent                                                                                                        |
+| **advertiser\_**<br />**tracking\_**<br />**enabled**  | Per event                                                             | ✅ REQUIRED (must be accurate)                                                                                                                                 | ❌ Not used | ❓ Unclear                                                           | Events Manager shows errors when wrong; **must reflect actual ATT status** - known RevenueCat bug sends false regardless of consent                                         |
+| **application\_**<br />**tracking\_**<br />**enabled** | Per event                                                             | ✅ REQUIRED                                                                                                                                                    | ❌ Not used | ❓ Unclear                                                           | Events Manager shows errors when wrong                                                                                                                                      |
+| **extinfo**                                            | 16-element array                                                      | ✅ REQUIRED                                                                                                                                                    | ❌ Not used | ❓ Unclear                                                           | May be used for probabilistic matching; no explicit AEM requirement found                                                                                                   |
+| **em** (hashed email)                                  | User-level                                                            | 🤷Uncertain, test it if you want, at your own risk. "Highest" priority in Meta CAPI docs but no MMP confirms for iOS AEM. ⚠️ **Compliance risk** (ATT + GDPR) | ❌ Not used | ✅ \*\*Highest priority. \*\*<br />⚠️ **Compliance risk** (GDPR etc) | Meta CAPI docs show "Highest" priority for matching. May help iOS optimization. Apple considers this "tracking" under ATT. GDPR requires consent.                           |
+| **ph** (hashed phone)                                  | User-level                                                            | 🤷Uncertain, test it if you want, at your own risk. "High" priority in Meta CAPI docs but no MMP confirms for iOS AEM. ⚠️ **Compliance risk** (ATT + GDPR)    | ❌ Not used | ✅ **High priority.**<br />⚠️ **Compliance risk** (GDPR etc)         | Meta CAPI docs show "High" priority. Same compliance concerns as email                                                                                                      |
+| **fn/ln** (hashed names)                               | User-level                                                            | ✅ UNCERTAIN - Medium priority per Meta CAPI.<br />⚠️ **Compliance risk** (ATT + GDPR)                                                                         | ❌ Not used | ✅ Medium priority.<br />⚠️ **Compliance risk** (GDPR etc)           | Part of "Other hashed Contact Information" - Medium priority in Meta CAPI docs                                                                                              |
+| **ge** (gender)                                        | User-level                                                            | 🤷Uncertain, test it if you want, at your own risk. Medium priority per Meta CAPI.<br />**Compliance risk** (ATT + GDPR)                                      | ❌ Not used | ✅ Medium priority.<br />⚠️ **Compliance risk** (GDPR etc)           | Part of "Other hashed Contact Information" - Medium priority                                                                                                                |
+| **db** (date of birth)                                 | User-level                                                            | 🤷Uncertain, test it if you want, at your own risk.  Medium priority per Meta CAPI.<br />⚠️ **Compliance risk** (ATT + GDPR)                                  | ❌ Not used | ✅ Medium priority.<br />⚠️ **Compliance risk** (GDPR etc)           | Part of "Other hashed Contact Information" - Medium priority                                                                                                                |
+| **zp/ct/st/country**                                   | User-level                                                            | 🤷Uncertain, test it if you want, at your own risk. Medium priority per Meta CAPI.<br />⚠️  **Compliance risk** (ATT + GDPR)                                  | ❌ Not used | ✅ Medium priority.<br />⚠️ **Compliance risk** (GDPR etc)           | Part of "Other hashed Contact Information" - Medium priority                                                                                                                |
+| **external_id**                                        | User-level (your system)                                              | 🤷Uncertain, test it if you want, at your own risk. Medium priority per Meta CAPI.<br />⚠️ **Compliance risk** (ATT + GDPR)                                   | ❌ Not used | ✅ Medium priority.<br />⚠️ **Compliance risk** (GDPR etc)           | Listed as "Medium" priority in Meta CAPI docs. Useful for deduplication & cross-device matching                                                                             |
+| **fbc**                                                | Browser session                                                       | ❌ Not used                                                                                                                                                    | ❌ Not used | ❌ Not used                                                          | Facebook click ID from `_fbc` cookie; web CAPI only                                                                                                                         |
+| **fbp**                                                | Browser session                                                       | ❌ Not used                                                                                                                                                    | ❌ Not used | ❌ Not used                                                          | Facebook browser ID from `_fbp` cookie; web CAPI only                                                                                                                       |
+
+As you can see, all campaigns types use different data points. As a result, you shouldn't be surprised to have very different results between each of these campaign types, especially for SKAN campaigns as they don't use any ID that would help identify people personally.
+
+Don't stress too much over sending personal info such as email etc : these are not the most explicitly important for **attribution**. Just don't send them if you're not GDPR compliant yet. Think about this later, as sending them for the users who agree to do so might help for **campaign optimization**.
+
+**The IDFA, IDFV, IP address and all other parameters will be passed correctly to Meta if you use the Meta SDK or an MMP to collect them.** The Meta SDK enables you to collect these parameters very easily if not automatically. If you have any issue with your event tracking in Meta Ads or Meta Events Manager, I'm 100% sure this is because one of these parameters is missing in your client side code.
+
+The reason why I recommend to track App Events like `start_trial` and `purchase` **from the client using Meta's SDK** and not through Meta's server-side solution called "Conversions API" is because ****you might think RevenueCat can send this to Meta for you directly as they have an integration with Meta's Conversions API; however, RevenueCat's integration does not work well, and it is the same for all of its competitors**** (I'll update this if it changes, and things move fast so I expect this to change soon!).
+
+TL;DR : don't waste time trying to make RevenueCat's Meta Conversions API integration work (like I did 😅): it doesnt (yet) ! Meta forces you to use only 1 source for all your events if you want to use AEM.
+
+However, RevenueCat's integrations with MMPs work perfectly well, and MMPs correctly pass the required parameters to Ad Networks. and Meta considers your MMP as a single source. **So when you're past your first tests, use an MMP alongside its integration with RevenueCat as your events source for Meta Ads.**
+
+## integrate the Meta SDK and setup the ATT Prompt on iOS
+
+here are the docs you need to follow :
+
+- Meta App Event Tracking: https://developers.facebook.com/docs/app-events
+- Get Started with App Events on iOS / Android / Unity : https://developers.facebook.com/docs/app-events/getting-started
+- Add your events (Start Trial & Purchase) -\> **VERY IMPORTANT : The FB SDKs "Automatic Event Tracking feature" seems to be completely broken for a while ⚠️ Make sure you deactivate automatic event tracking in your app, and track your events within your code)** https://developers.facebook.com/docs/app-events/getting-started-app-events-ios#step-7--add-app-events
+- Apple's App Tracking Transparency: Request user authorization to access app-related data for tracking the user or the device (IDFA) https://developer.apple.com/documentation/apptrackingtransparency
+- Advertiser Tracking Enabled (pass IDFA and ATE status to the Meta SDK on iOS) : https://developers.facebook.com/docs/app-events/guides/advertising-tracking-enabled/
+
+good luck !
+
+## configuring [developers.facebook.com](http://developers.facebook.com)
+
+the docs for "Get Started with App Events" told you to create an account on [developers.facebook.com](http://developers.facebook.com)
+
+make sure you also :
+
+- add your privacy policy and terms & conditions under App Settings \> Basics
+- under "Publish", click on "publish" and it will be in "Live Mode"
+- still under "Publish", click on "add platform" -\> iOS. Then just adding the iPhone Store ID is fine. as stated above, don't use "Log in-app events automatically" even if it is written "recommended". This is broken for iOS (source [1](https://github.com/facebook/facebook-ios-sdk/issues/2377), [2](https://github.com/facebook/facebook-ios-sdk/issues/2564)). Might work for Android but I'm not sure. I recommend your to log your Standard Events (Start Trial, Purchase) manually again. and until Meta fixes automatic event tracking, you don't need to input your Shared Secret either.
+
+![Screenshot 2026 01 28 At 17 12 05](/images/Screenshot2026-01-28at17.12.05.png)
+
+- repeat for Android. input your Key Hashes, package name (e.g. bundle ID) , and you can leave "com.facebook.FacebookActivity" for "class name".
+
+![Screenshot 2026 01 29 At 18 32 13](/images/Screenshot2026-01-29at18.32.13.png)
+
+## accepting Meta's AEM Terms
+
+you need to sign this for your app: https://developers.facebook.com/advanced_mobile_measurement/terms
+
+now you're good for [developers.facebook.com](http://developers.facebook.com) !
+
+## linking your app to your Business Manager
+
+you should have already created your Business Manager on [business.facebook.com](http://business.facebook.com)
+
+now under business settings \> accounts \> apps, click on "add". then click on "connect an app id" and input your App ID from [developers.facebook.com](http://developers.facebook.com)
+
+![Screenshot 2026 01 28 At 18 11 07](/images/Screenshot2026-01-28at18.11.07.png)
+
+usually you're the app owner as well, so your app might be added instantly. otherwise, its owner will receive an email like that and they will need to accept.
+
+<img
+  src="/images/Screenshot2026-01-28at18.16.00.png"
+  alt="Screenshot 2026 01 28 At 18 16 00"
+  title="Screenshot 2026 01 28 At 18 16 00"
+  style={{ width:"58%" }}
+/>
+
+once the app is in your business manager account you should be good to go to the next step!
+
+## configuring Meta Events Manager for AEM campaigns & SKAdNetwork for SKAN campaigns
+
+if you've correctly completed the steps above, you'll need to check the Meta Events Manager interface to see whether you are eligible for AEM campaigns.
+
+It's right here : click on your dataset https://business.facebook.com/events_manager2/
+
+under "Overview" look at your events. where are they coming from (Meta SDK or your MMP or both? it's ok to have both by the way), and do you see as many as you thought you should? Ideally it should look something like this:
+
+![Screenshot 2026 01 28 At 18 42 23](/images/Screenshot2026-01-28at18.42.23.png)
+
+then go to "Settings". we are going to check whether you are eligible for AEM campaigns.
+
+<img
+  src="/images/Screenshot2026-01-28at15.19.42.png"
+  alt="Screenshot 2026 01 28 At 15 19 42"
+  title="Screenshot 2026 01 28 At 15 19 42"
+  style={{ width:"57%" }}
+/>
+
+### check whether you are eligible for AEM campaigns
+
+Under "Meta's attribution for iOS 14+", click on "check app eligibility".
+
+Don't worry about verifying your app's deep link : this is for re-engagement campaigns, and here we are launching your first user acquisition campaign. This is different from re engagement.
+
+If you see something like this for the events you want to run campaigns for (App Installs, Start Trial, Purchase), you're eligible for AEM campaigns. Congrats ! 🎉
+
+![Screenshot 2026 01 28 At 16 22 34](/images/Screenshot2026-01-28at16.22.34.png)
+
+This example has Adjust as an MMP but this would be the same if your use the Facebook SDK.
+
+If you're not eligible it's very likely due to the fact that you are not passing parameters correctly. Refer to the table at the "diving deeper into what meta ads needs as parameters for the events you send" section above and make sure you send all of that.
+
+### Then let's configure SKAdNetwork
+
+to be clear, AEM campaigns don't use SKAdnetwork, so you can skip this section if you're only launching an AEM campaign.
+
+Under "Apple's SKAdNetwork" click on "configure events".
+
+I'm not going to guide you here, follow through instructions whether you're using "SKAdNetwork for the Facebook SDK" or your MMP's SKAN configuration. Having something like this is fine to start your first SKAN campaigns.
+
+![Screenshot 2026 01 28 At 16 51 24](/images/Screenshot2026-01-28at16.51.24.png)
+
+### how about Android ?
+
+not much ! make sure you're collecting all the parameters stated above for android through the SDK you are using, and you should be good.
+
+## now we can launch your campaign !
+
+I recommend you to launch campaigns on iOS in the US, if you have enough budget. iOS is the biggest OS for subscription apps, and the US is the biggest market. Very often, 50% of revenues for apps and games available worldwide come from the US alone, so if your test campaigns work well on iOS US, you are likely to be able to grow.
+
+Run a test for at least 7 days, with at least \$50 of daily budget for each campaign. Ideally, you should get 50 events per week on each campaign to consider that your budget is enough to give you interpretable results, so your ideal weekly budget should be your expected cost per goal \* 50.
+
+use broad targeting (e.g. no restriction on targeting) and try to test at the very least 5 creatives (images or videos). I would recommend to launch an iOS AEM Campaign, alongside a SKAN campaign if you have enough budget, and see which ones drive the best results. usually it's iOS AEM.
+
+If you have an Android app, launch a campaign on it too.
+
+If you implement the Meta SDK and track all the required parameters then you will be able to launch these campaigns with no issues.
+
+Here's a recap:
+
+- 1 campaign for iOS AEM, 1 campaign for iOS SKAN, 1 campaign for Android if you have Android
+- only 1 ad set per campaign, with 5 ads minimum in this ad set. when you have new creatives, just add them to the same ad set to test them.
+- \$50 per day each, minimum. ideally, your weekly budget should be your expected cost per goal \* 50, as you ideally need 50 events per week. if this is too much for you, target cheaper countries.
+- let the campaign run for 7 days minimum. check it every day, stop it if you don't have any install on the first 24h for iOS AEM & Android, or the first 72h for iOS SKAN.
+- targeting : US, broad (no targeting restriction), 18 - 65+ , male & female
+
+Here's the video version of this doc at the timestamp where I talk about how to create the campaign (17:47), because there's a lot to cover and it's pretty long.
+
+<iframe src="https://www.youtube.com/embed/x2tKbtJoSrM?start=1068" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+I'm not even talking about creatives here ! there's a ton of resources to help you create awesome creatives. There are plenty of good resources online to get started for free though. Keep in mind that apart from your product's relevance and the details of your campaigns, your creatives will be your most important levers. We often say 80% of your campaigns' success is due to your creatives!
+
+## Analyzing your return on investment
+
+### Let's first talk about VAT and App Store fees
+
+in my opinion talking about "gross ROAS" in a bad idea. You want to talk about your net ROAS, e.g. after VAT and fees.
+
+_<u>Keep in mind that Purchases tracked through the Meta SDK will report the raw amont of your transaction, ex: \$9.99 not minus VAT and App Store fees.</u>_
+
+**If you want to understand your net revenue (="Proceeds"), here's a comparison betwen the US (no VAT) and France, all in USD to simplify.**
+
+| Scenario                           | Customer Price<br />(with VAT) | Price without VAT      | Store Commission       | **You Receive**              |
+| :--------------------------------- | :----------------------------- | :--------------------- | :--------------------- | :--------------------------- |
+| **\$9.99 US** (Small Business)     | \$9.99                         | \$9.99 (no VAT)        | \$9.99 × 0.15 = \$1.50 | \$9.99 − \$1.50 = **\$8.49** |
+| **\$9.99 US** (Standard)           | \$9.99                         | \$9.99 (no VAT)        | \$9.99 × 0.30 = \$3.00 | \$9.99 − \$3.00 = **\$6.99** |
+| **\$9.99 France** (Small Business) | \$9.99                         | \$9.99 ÷ 1.20 = \$8.33 | \$8.33 × 0.15 = \$1.25 | \$8.33 − \$1.25 = **\$7.08** |
+| **\$9.99 France** (Standard)       | \$9.99                         | \$9.99 ÷ 1.20 = \$8.33 | \$8.33 × 0.30 = \$2.50 | \$8.33 − \$2.50 = **\$5.83** |
+
+### Formula Summary
+
+- **US (no VAT):** Proceeds = Price × (1 - Commission Rate)
+- **EU (VAT inclusive):** Proceeds = [Price ÷ (1 + VAT Rate)] × (1 - Commission Rate)
+
+### Small Business Programs
+
+- **Apple App Store**: 15% if you earned under \$1M the previous calendar year
+- **Google Play Store**: 15% on the first \$1M of current year revenue, then 30% beyond
+
+When you run your first campaigns with the Meta SDK, you'll have to recalculate your NET ROAS by hand. My opinion is that this is fine for your first campaigns.
+
+When you want to scale your campaigns, you typically use an MMP, and enable RevenueCat's integration with your MMP, and RevenueCat computes this for your and sends the NET amounts to your MMP, which is super convenient especially if you run campaigns worldwide.
+
+### my simple method for ROAS analysis on your first campaigns
+
+I recommend you to use a use simple methods to analyse your first campaigns results. here is one I would recomment :
+
+**for each campaign, log progress in a spreadsheet like this. your goal is to find the campaign that gets your the best ROAS.**
+
+![Screenshot 2026 01 30 At 10 11 05](/images/Screenshot2026-01-30at10.11.05.png)
+
+**Compare cost per trial on meta ads with the d7 / 14 / d30 / d60 revenue per trial you see on RevenueCat.** be mindful of VAT and App Store fees -\> remove these from the equation as we saw earlier.
+
+**dX ROAS = dX revenue per trial / cost per trial**
+
+ex : d14 PROCEEDS (not revenue) per trial as per RevenueCat = \$10, cost per trial as per Meta Ads = \$10 -\> d14 ROAS = 100%
+
+use the cost per trial from Facebook Ads, not the one that you manually re-calculate from RevenueCat or whatever complex method. if your metrics don't show that your campaigns are profitable
+
+anything above 100% means you're profitable.
+
+anything below = you should work on your CAC vs LTV ratio.
+
+if you're profitable or close to profitable, then only your stack should be more sophisticated than having the Meta SDK.
+
+keep in mind that it is very common for consumer apps to have a break even window that range from 60 to 365 days, especially in very crowded niches (ex: dating, gaming, etc...). [For example Voodoo.io, which is an extremely competitive company, operates on a basis of a 150% ROAS goal after 120 days as stated publicly by one of their VPs](https://www.youtube.com/watch?v=pKMOGndZ8Eo). Which means they probably break even around d60.
+
+If you break even much faster than what your competitors seem to report, then you probably have a very interesting product (and I want to work with you because then it means that my job to scale your user acquisition campaigns will be super easy 😁)!
+
+Don't believe the hype : not everyone has a 90% break even at D7. it's possible though, and the apps that have this are the ones that will experience the fastest growth, #1 spots on the app store, etc. if that's not the results you have, but your campaigns are profitable, then you can still probably grow by spending more on your campaigns! and in the meantime, you can still work to try to reduce your time to break even, or improve your long term LTV, whatever goal you identified that helps you grow best.
+
+## closing thouhts
+
+maybe you won't crush it on your first try, but the fastest growing app companies use processes just like this one for the release of their new apps :
+
+- you release your app on the store
+- you see whether there's interest for it on iOS US on Meta (or any other channel)
+  - if there's absolutely no positive sign you throw it away or completely pivot your app's unique selling point.
+  - If you have positive signs, then you try to have more sophisticated User Acquisition operations and improve your product in order to optimize your campaign performances
+
+Good luck ✌️
+
+And if you’re already spending on paid acquisition, I offer a 15min diagnostic call to review your Meta Ads setup and identify scaling bottlenecks. → Book your diagnostic at https://firsttry.co
+
+Tim
+
+## Sources
+
+### MMPs (Mobile Measurement Partners)
+
+| Source                         | URL                                                            |
+| :----------------------------- | :------------------------------------------------------------- |
+| AppsFlyer - Meta Ads AEM Setup | https://support.appsflyer.com/hc/en-us/articles/19228737402129 |
+| Adjust - Meta Ads Setup        | https://help.adjust.com/en/article/facebook                    |
+| Singular - Meta AEM            | https://support.singular.net/hc/en-us/articles/16800663498139  |
+| Tenjin - Meta AEM              | https://docs.tenjin.com/docs/meta                              |
+
+### Meta Official Docs
+
+| Source                                                                               | URL                                                                                                           |
+| :----------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------ |
+| Customer Information Parameters                                                      | https://developers.facebook.com/docs/marketing-api/conversions-api/parameters/customer-information-parameters |
+| Best Practices - Conversions API                                                     | https://developers.facebook.com/docs/marketing-api/conversions-api/best-practices                             |
+| CAPI for App Events                                                                  | https://developers.facebook.com/docs/marketing-api/conversions-api/app-events                                 |
+| Meta - Install Referrer Documentation                                                | https://developers.facebook.com/docs/app-ads/install-referrer/                                                |
+| Meta - How to check if your app events are eligible for Aggregated Event Measurement | https://www.facebook.com/business/help/617021863580582?id=1877298665783613                                    |
+
+### Eric Seufert (Mobile Dev Memo)
+
+| Source                                                                 | URL                                                                                 |
+| :--------------------------------------------------------------------- | :---------------------------------------------------------------------------------- |
+| "Meta's AEM update and the disappearing IP address" (Oct 2023)         | https://mobiledevmemo.com/is-metas-overhaul-of-aem-a-sign-of-att-detente/           |
+| "Unpacking Meta's changes to its AEM measurement framework" (May 2023) | https://mobiledevmemo.com/unpacking-metas-changes-to-its-aem-measurement-framework/ |
+
+### Compliance
+
+| Source                            | URL                                                              |
+| :-------------------------------- | :--------------------------------------------------------------- |
+| Apple - User Privacy and Data Use | https://developer.apple.com/app-store/user-privacy-and-data-use/ |
