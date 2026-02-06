@@ -45,6 +45,11 @@
     "linkedin": "https://www.linkedin.com/in/timotherey/",
     "x": "https://x.com/timothe_rey"
   },
+  "seo": {
+    "metatags": {
+      "canonical": "https://docs.firsttry.co"
+    }
+  },
   "feedback": {
     "thumbsRating": true
   }
