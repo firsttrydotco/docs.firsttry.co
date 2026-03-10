@@ -82,7 +82,7 @@ so many options ! but **here's my opinion :**
 
 ## run your first tests with the facebook sdk
 
-1. if this is your first test, you need to go fast. **just implement the Facebook SDK in your app and track the events you want to optimize for using the client side sdk.** it works well, it is easy to setup, and it's free. I would advise you to **just track start_trial and purchase events, for the sake of simplicity.** and again, I insist : **track your events using the Meta sdk, on the client, not using anything server-side.** I'll explain why a bit later below.
+1. if this is your first test, you need to go fast. **just implement the Facebook SDK in your app and track the events you want to optimize for using the client side sdk.** it works well, it is easy to setup, and it's free. I would advise you to **just track start_trial and purchase events, for the sake of simplicity.** and again, I insist : **track your events using the Meta sdk, on the client, not using anything server-side.** I'll explain why a bit later below. **⚠️ Important: if you want AEM eligibility with the SDK alone, you MUST also implement [Advanced Matching](https://developers.facebook.com/docs/app-events/advanced-matching/) via `setUserData()` - pass hashed email, phone, etc. Without this, your iOS AEM campaigns won't be eligible.**
 2. **implement a subscription analytics tool** like RevenueCat / Qonversion / Adapty / Purchasely in order to understand your subscription revenue per user, **but don't use it to send events to Meta Ads directly** - [these tools' integrations with Meta's Conversions API are currently broken](https://youtu.be/goI-oAn8KYU).
 3. I usually recommend to implement an **MMP** only when you had some positive signs when it comes to user acquisition. In fact, your MMP is going to be the central hub for your decisions when if comes to campaigns budgets allocation and ROAS analysis. So I'm not saying you shouldn't implement an MMP - rather that you should validate that your app has acquisition costs that will enable you to use paid user acquisition as a growth channel.
 
@@ -181,7 +181,7 @@ Here's the list of the **parameters you can send to Meta Ads** as part of the `i
 
 | Parameter                                              | Scope                                                                 | iOS AEM                                                                                                                                                       | iOS SKAN   | Android                                                             | Why is it important?                                                                                                                                                        |
 | ------------------------------------------------------ | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **vendor_id (IDFV)**                                   | Per vendor (survives reinstall if other apps from same vendor remain) | ✅ REQUIRED                                                                                                                                                    | ❌ Not used | N/A                                                                 | AppsFlyer: "Meta requires both the IP address and the IDFV to be included in the event payload. Without these identifiers, the event won't be eligible for AEM attribution" |
+| **vendor_id (IDFV)**                                   | Per vendor (survives reinstall if other apps from same vendor remain) | ⚠️ MMP ONLY - Required when using MMP/Conversions API. The Facebook SDK does not send IDFV.                                                                    | ❌ Not used | N/A                                                                 | AppsFlyer: "Meta requires both the IP address and the IDFV to be included in the event payload." **Note: This applies to the MMP/S2S path only.** |
 | **IP Address**                                         | Session/temporary                                                     | ✅ REQUIRED (High priority)                                                                                                                                    | ❌ Not used | ✅ Recommended                                                       | Required for AEM eligibility. Meta CAPI docs list it as "High" priority.                                                                                                    |
 | **User Agent**                                         | Session                                                               | ✅ High priority                                                                                                                                               | ❌ Not used | ✅ Used                                                              | Eric Seufert notes MMPs transmit IP + User Agent to Meta for AEM measurement. Listed as "High" priority in Meta CAPI matching docs                                          |
 | **advertiser_id (IDFA)**                               | Device-wide (survives reinstall)                                      | ⚠️ Optional but very important - best signal when ATT granted                                                                                                 | ❌ Not used | N/A                                                                 | Improves match quality when ATT consent granted                                                                                                                             |
@@ -203,7 +203,37 @@ Here's the list of the **parameters you can send to Meta Ads** as part of the `i
 
 As you can see, all campaigns types use different data points. As a result, you shouldn't be surprised to have very different results between each of these campaign types, especially for SKAN campaigns as they don't use any ID that would help identify people personally.
 
-Don't stress too much over sending personal info such as email etc : these are not the most explicitly important for **attribution**. Just don't send them if you're not GDPR compliant yet. Think about this later, as sending them for the users who agree to do so might help for **campaign optimization**.
+### Two paths to iOS AEM eligibility
+
+<Warning>
+**This is critical to understand:** The requirements for AEM eligibility differ depending on whether you use the Facebook SDK directly or an MMP/Conversions API.
+</Warning>
+
+**Path 1: MMP / Conversions API (Server-to-Server)**
+- Requires **IDFV + IP Address** for AEM eligibility
+- Your MMP collects the IDFV and sends it via the Conversions API
+- This is what most MMP documentation refers to
+
+**Path 2: Facebook SDK (Client-side)**
+- The Facebook SDK **does not send IDFV** (vendor_id) - this was confirmed via network traffic analysis
+- Instead, AEM eligibility depends on **Advanced Matching** - user data you provide via `setUserData()`
+- Advanced Matching includes hashed: email (em), phone (ph), first name (fn), last name (ln), etc.
+
+<Info>
+**Traffic analysis of real apps showed a clear pattern:**
+- Apps with multiple Advanced Matching fields populated → AEM eligible ✅
+- Apps with only 1 field (e.g., email only) → AEM NOT eligible ❌
+- Apps with no Advanced Matching data → AEM NOT eligible ❌
+
+This strongly suggests that **if you use the Facebook SDK only (no MMP), you MUST implement Advanced Matching** via `setUserData()` to be eligible for AEM campaigns.
+</Info>
+
+**How to implement Advanced Matching with the Facebook SDK:**
+- Documentation: https://developers.facebook.com/docs/app-events/advanced-matching/
+- Use `setUserData()` to pass hashed user information (email, phone, name, etc.)
+- The more fields you populate, the better your match quality
+
+Don't stress too much over sending personal info such as email etc if you're using an MMP - in that case, IDFV + IP is what matters. But **if you're using the Facebook SDK directly, Advanced Matching becomes critical for AEM eligibility**. Just make sure you're GDPR compliant if you operate in Europe.
 
 **The IDFA, IDFV, IP address and all other parameters will be passed correctly to Meta if you use the Meta SDK or an MMP to collect them.** The Meta SDK enables you to collect these parameters very easily if not automatically. If you have any issue with your event tracking in Meta Ads or Meta Events Manager, I'm 100% sure this is because one of these parameters is missing in your client side code.
 
@@ -222,6 +252,7 @@ here are the docs you need to follow :
 - Add your events (Start Trial & Purchase) -\> **VERY IMPORTANT : The FB SDKs "Automatic Event Tracking feature" seems to be completely broken for a while ⚠️ Make sure you deactivate automatic event tracking in your app, and track your events within your code)** https://developers.facebook.com/docs/app-events/getting-started-app-events-ios#step-7--add-app-events
 - Apple's App Tracking Transparency: Request user authorization to access app-related data for tracking the user or the device (IDFA) https://developer.apple.com/documentation/apptrackingtransparency
 - Advertiser Tracking Enabled (pass IDFA and ATE status to the Meta SDK on iOS) : https://developers.facebook.com/docs/app-events/guides/advertising-tracking-enabled/
+- **Advanced Matching (CRITICAL for SDK-only AEM eligibility):** https://developers.facebook.com/docs/app-events/advanced-matching/ - Use `setUserData()` to pass hashed email, phone, name, etc.
 
 good luck !
 
@@ -433,6 +464,7 @@ Tim
 | CAPI for App Events                                                                  | https://developers.facebook.com/docs/marketing-api/conversions-api/app-events                                 |
 | Meta - Install Referrer Documentation                                                | https://developers.facebook.com/docs/app-ads/install-referrer/                                                |
 | Meta - How to check if your app events are eligible for Aggregated Event Measurement | https://www.facebook.com/business/help/617021863580582?id=1877298665783613                                    |
+| **Advanced Matching for App Events (SDK-only AEM eligibility)**                      | https://developers.facebook.com/docs/app-events/advanced-matching/                                            |
 
 ### Eric Seufert (Mobile Dev Memo)
 
