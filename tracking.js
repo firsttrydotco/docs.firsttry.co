@@ -1,8 +1,18 @@
-// Custom PostHog tracking for First Try Docs
-// Note: PostHog is initialized by Mintlify via docs.json integration
-// This file only adds custom event tracking
+// Custom tracking for First Try Docs
+// Mintlify auto-includes this file globally on the docs site.
 
 (function() {
+  var AHREFS_SCRIPT_ID = 'ahrefs-web-analytics';
+
+  if (!document.getElementById(AHREFS_SCRIPT_ID)) {
+    var ahrefsScript = document.createElement('script');
+    ahrefsScript.id = AHREFS_SCRIPT_ID;
+    ahrefsScript.async = true;
+    ahrefsScript.src = 'https://analytics.ahrefs.com/analytics.js';
+    ahrefsScript.setAttribute('data-key', 'bTTMgK9Y0ZSdoA2/lDrvhg');
+    document.head.appendChild(ahrefsScript);
+  }
+
   // Wait for Mintlify's PostHog to be fully loaded
   function waitForPostHog(callback, attempts) {
     attempts = attempts || 0;
