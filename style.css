@@ -1,0 +1,38 @@
+body:has(.meta-ads-wide-article) .meta-ads-wide-article {
+  display: none;
+}
+
+body:has(.meta-ads-wide-article) div:has(> #content-container) {
+  max-width: min(100vw - 32px, 1720px) !important;
+  margin-inline: auto !important;
+  padding-inline: clamp(16px, 3vw, 40px) !important;
+}
+
+body:has(.meta-ads-wide-article) #content-container,
+body:has(.meta-ads-wide-article) #content-area,
+body:has(.meta-ads-wide-article) #content {
+  max-width: none !important;
+  width: 100% !important;
+}
+
+body:has(.meta-ads-wide-article) #content-area {
+  padding-right: 0 !important;
+}
+
+@media (min-width: 1024px) {
+  body:has(.meta-ads-wide-article) #content-area {
+    padding-left: 18rem !important;
+  }
+}
+
+@media (min-width: 1280px) {
+  body:has(.meta-ads-wide-article) #content-area {
+    padding-left: 19rem !important;
+  }
+}
+
+@media (min-width: 1536px) {
+  body:has(.meta-ads-wide-article) #content-area {
+    padding-left: 20rem !important;
+  }
+}
