@@ -2,6 +2,10 @@ body:has(.meta-ads-wide-article) .meta-ads-wide-article {
   display: none;
 }
 
+#navbar button[aria-label="More actions"] {
+  display: none !important;
+}
+
 body:has(.meta-ads-wide-article) div:has(> #content-container) {
   max-width: min(100vw - 32px, 1720px) !important;
   margin-inline: auto !important;
@@ -21,18 +25,18 @@ body:has(.meta-ads-wide-article) #content-area {
 
 @media (min-width: 1024px) {
   body:has(.meta-ads-wide-article) #content-area {
-    padding-left: 18rem !important;
+    padding-left: 21rem !important;
   }
 }
 
 @media (min-width: 1280px) {
   body:has(.meta-ads-wide-article) #content-area {
-    padding-left: 19rem !important;
+    padding-left: 22rem !important;
   }
 }
 
 @media (min-width: 1536px) {
   body:has(.meta-ads-wide-article) #content-area {
-    padding-left: 20rem !important;
+    padding-left: 23rem !important;
   }
 }
