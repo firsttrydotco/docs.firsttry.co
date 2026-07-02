@@ -81,6 +81,12 @@
         }
       }
 
+      // Buy Me a Coffee (donation link)
+      if (!isCTA && href && href.includes('buymeacoffee.com')) {
+        isCTA = true;
+        ctaName = 'Buy Me a Coffee';
+      }
+
       // Any element with CTA-like keywords
       if (!isCTA) {
         var ctaKeywords = ['cta', 'get started', 'sign up', 'contact', 'book', 'schedule'];
