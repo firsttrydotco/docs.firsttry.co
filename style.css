@@ -24,19 +24,11 @@ body:has(.meta-ads-wide-article) #content-area {
 }
 
 @media (min-width: 1024px) {
-  body:has(.meta-ads-wide-article) #content-area {
-    padding-left: 21rem !important;
-  }
-}
-
-@media (min-width: 1280px) {
-  body:has(.meta-ads-wide-article) #content-area {
-    padding-left: 22rem !important;
-  }
-}
-
-@media (min-width: 1536px) {
-  body:has(.meta-ads-wide-article) #content-area {
-    padding-left: 23rem !important;
+  body:has(.meta-ads-wide-article)
+    nav#sidebar
+    ~ #content-container
+    #content-area {
+    /* The deployed sidebar is already in the page flow, so do not reserve its width twice. */
+    padding-left: 5.7rem !important;
   }
 }
