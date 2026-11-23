@@ -1,3 +1,14 @@
+#content a.link[href],
+#sidebar a[href],
+#table-of-contents a[href],
+#pagination a[href] {
+  color: revert !important;
+}
+
+#content a.link[href] {
+  border-bottom-color: currentColor !important;
+}
+
 body:has(.meta-ads-wide-article) .meta-ads-wide-article {
   display: none;
 }
